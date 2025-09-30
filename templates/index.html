@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>초간단 메신저</title>
+        <style>
+            body { font-family: sans-serif; }
+            #messages { list-style-type: none; margin: 0; padding: 0; border: 1px solid #ddd; height: 300px; overflow-y: scroll; }
+            #messages li { padding: 8px 12px; }
+            #messages li:nth-child(odd) { background: #f9f9f9; }
+            #form { background: #eee; padding: 5px; position: fixed; bottom: 0; width: 98%; }
+            #input { border: 1px solid #ddd; padding: 10px; width: 85%; }
+            button { width: 10%; background: #007bff; color: white; border: none; padding: 12px; }
+            .info { color: #888; font-style: italic; text-align: center; } /* 👈 알림 메시지 스타일 추가 */
+        </style>
+    </head>
+    <body>
+        <h1>실시간 공개 채팅방</h1>
+        <ul id="messages"></ul>
+        <form id="form" action="">
+            <input id="input" autocomplete="off" /><button>전송</button>
+        </form>
+
+        <script>
+            // ✨ 1. 접속 시 사용자 이름 입력받기
+            const clientId = prompt("채팅에서 사용할 닉네임을 입력하세요:");
+
+            // 이름이 없으면 접속 불가
+            if (!clientId) {
+                alert("닉네임이 필요합니다!");
+                window.location.reload();
+            }
+
+            // ✨ 2. 웹소켓 주소에 사용자 이름을 포함하여 연결
+            // const ws = new WebSocket(`ws://localhost:8000/ws/${clientId}`);
+            const ws = new WebSocket(`wss://lakisha-nonathletic-exie.ngrok-free.dev/ws/${clientId}`);
+
+            const messages = document.getElementById('messages');
+            const form = document.getElementById('form');
+            const input = document.getElementById('input');
+
+            ws.onmessage = function(event) {
+                const li = document.createElement('li');
+                
+                // ✨ 3. 입장/퇴장 알림 메시지는 다른 스타일 적용
+                if (event.data.startsWith('📢')) {
+                    li.classList.add('info');
+                }
+
+                li.textContent = event.data;
+                messages.appendChild(li);
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            form.onsubmit = function(event) {
+                event.preventDefault();
+                if (input.value) {
+                    ws.send(input.value);
+                    input.value = '';
+                }
+            };
+        </script>
+    </body>
+</html>
